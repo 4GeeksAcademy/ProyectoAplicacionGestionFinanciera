@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { FaEuroSign, FaCalendarAlt, FaTag, FaInfoCircle, FaTags } from "react-icons/fa"; // Añadir FaEuroSign
+import { FaEuroSign, FaCalendarAlt, FaTag, FaInfoCircle, FaTags } from "react-icons/fa";
 import "../../styles/FinancesForm.css";
 
-// Componente de campo de entrada reutilizable con icono
+// Componente de campo de entrada reutilizable
 const InputField = ({ label, id, type, value, onChange, placeholder, required, icon }) => (
     <div className="mb-4 position-relative">
         <label htmlFor={id} className="form-label fw-bold" style={{ color: "var(--label-color)" }}>
@@ -31,7 +31,7 @@ const InputField = ({ label, id, type, value, onChange, placeholder, required, i
     </div>
 );
 
-// Componente SelectField reutilizable con icono
+// Componente SelectField reutilizable
 const SelectField = ({ label, id, value, onChange, options, required, icon }) => (
     <div className="mb-4 position-relative">
         <label htmlFor={id} className="form-label fw-bold" style={{ color: "var(--label-color)" }}>
@@ -123,6 +123,7 @@ export function FinanceForm() {
             <div className="card shadow-lg border-primary">
                 <div className="card-body">
                     <h1 className="card-title text-center mb-4" style={{ color: "var(--primary-color)" }}>Create Finance</h1>
+                    <h2 className="text-blue-500">Hello World!</h2>
                     {message && <p className="text-center" style={{ color: "var(--text-color)" }}>{message}</p>}
                     <form onSubmit={handleSubmit}>
                         <div className="row">
@@ -231,5 +232,3 @@ export function FinanceForm() {
         </div>
     );
 }
-
-
