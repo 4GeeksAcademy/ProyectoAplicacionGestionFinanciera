@@ -7,8 +7,7 @@ export const Demo = () => {
 	const { store, actions } = useContext(Context);
 
 	return (
-		<div className="container">
-			<ChartJSFinancesUser/>
+		<div className="container"> 
 		</div>
 	);
 };

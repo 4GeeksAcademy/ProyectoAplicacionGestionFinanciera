@@ -15,6 +15,7 @@ import { Navbar } from "./component/Navbar.jsx";
 import { Footer } from "./component/footer";
 import { Login } from "./pages/Login.jsx";
 import { Signup } from "./pages/Signup.jsx";
+import { AccessDenied } from "./pages/AccessDenied.jsx";
 
 
 //create your first component
