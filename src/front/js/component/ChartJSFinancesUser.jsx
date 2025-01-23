@@ -1,7 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+// src/components/BarChart.js
+import React from 'react';
 import { Line } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, Filler, PointElement } from "chart.js";
+import { useContext, useEffect, useState } from "react";
 import { Context } from "../store/appContext";
+import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, Title, Tooltip, Legend, Filler, PointElement } from "chart.js";
 
 // Registramos los componentes necesarios de Chart.js
 ChartJS.register(
@@ -19,7 +21,6 @@ export function ChartJSFinancesUser() {
   const [chartData, setChartData] = useState({ labels: [], incomes: [], expenses: [] });
   const { store } = useContext(Context);
 
-  // Hook useEffect para obtener los datos
   useEffect(() => {
     const getFinance = async () => {
       try {
@@ -45,7 +46,8 @@ export function ChartJSFinancesUser() {
 
           return acc;
         }, {});
-        // fechas en orden cronologico
+
+        // fechas en orden cronológico
         const sortedDates = Object.keys(groupedData).sort((a, b) => new Date(a) - new Date(b));
 
         // Convertimos el objeto agrupado en arrays para el gráfico
@@ -69,25 +71,24 @@ export function ChartJSFinancesUser() {
     getFinance();
   }, [store.userData.id]);
 
-  // Si los datos se cargaron correctamente, mostramos el gráfico con los datos obtenidos
   const data = {
     labels: chartData.labels,
     datasets: [
       {
         label: "Gastos",
         data: chartData.expenses,
-        backgroundColor: "rgba(255, 99, 132, 0.2)", 
-        borderColor: "rgba(255, 99, 132, 1)", 
+        backgroundColor: "rgba(255, 99, 132, 0.2)", // Color con transparencia
+        borderColor: "rgba(255, 99, 132, 1)", // Color del borde
         borderWidth: 1,
-        fill: true, 
+        fill: true, // Esto asegura que el área debajo de la línea esté rellena
       },
       {
         label: "Ingresos",
         data: chartData.incomes,
-        backgroundColor: "rgba(54, 162, 235, 0.2)", 
-        borderColor: "rgba(54, 162, 235, 1)", 
+        backgroundColor: "rgba(54, 162, 235, 0.2)", // Color con transparencia
+        borderColor: "rgba(54, 162, 235, 1)", // Color del borde
         borderWidth: 1,
-        fill: true, 
+        fill: true, // Esto asegura que el área debajo de la línea esté rellena
       },
     ],
   };
@@ -110,7 +111,7 @@ export function ChartJSFinancesUser() {
     },
     elements: {
       line: {
-        tension: 0.4, 
+        tension: 0.4, // Aquí se aplica el suavizado de la línea (0 para sin suavizado)
       },
     },
   };
