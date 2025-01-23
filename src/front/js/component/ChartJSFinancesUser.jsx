@@ -20,6 +20,7 @@ ChartJS.register(
 export function ChartJSFinancesUser() {
   const [chartData, setChartData] = useState({ labels: [], incomes: [], expenses: [] });
   const { store } = useContext(Context);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const getFinance = async () => {
@@ -28,9 +29,11 @@ export function ChartJSFinancesUser() {
           `${process.env.BACKEND_URL || "http://localhost:3001/"}api/finances2/2`
         );
         if (!response.ok) throw new Error("Error fetching data");
+
         const data = await response.json();
 
-        // Agrupamos datos por fecha
+        console.log("Datos recibidos:", data);
+
         const groupedData = data.reduce((acc, item) => {
           const formattedDate = new Date(item.date).toISOString().split("T")[0];
 
@@ -38,14 +41,21 @@ export function ChartJSFinancesUser() {
             acc[formattedDate] = { incomes: 0, expenses: 0 };
           }
 
-          if (item.id_category === 1) {
-            acc[formattedDate].expenses += item.amount;
-          } else if (item.id_category === 2) {
-            acc[formattedDate].incomes += item.amount;
+          // Verifica los valores de `id_type` y `amount` antes de realizar la suma
+          console.log(`Procesando item: ${JSON.stringify(item)}`);
+
+          // Verificamos el valor de `id_type` para identificar si es ingreso (1) o gasto (2)
+          if (item.id_type === 2) {
+            acc[formattedDate].expenses += parseFloat(item.amount) || 0; 
+          } else if (item.id_type === 1) {
+            acc[formattedDate].incomes += parseFloat(item.amount) || 0; 
           }
 
           return acc;
         }, {});
+
+        // Asegúrate de que los datos agrupados son correctos
+        console.log("Datos agrupados:", groupedData);
 
         // fechas en orden cronológico
         const sortedDates = Object.keys(groupedData).sort((a, b) => new Date(a) - new Date(b));
@@ -61,7 +71,12 @@ export function ChartJSFinancesUser() {
         const incomes = sortedDates.map((date) => groupedData[date].incomes);
         const expenses = sortedDates.map((date) => groupedData[date].expenses);
 
-        setChartData({ labels, incomes, expenses });
+        // Verifica si tenemos datos para las gráficas
+        if (incomes.length === 0 || expenses.length === 0) {
+          setError("No hay datos suficientes para mostrar en la gráfica.");
+        } else {
+          setChartData({ labels, incomes, expenses });
+        }
       } catch (err) {
         console.error("Error fetching finances:", err);
         setError(err.message || "Hubo un error al obtener los datos financieros.");
@@ -77,18 +92,18 @@ export function ChartJSFinancesUser() {
       {
         label: "Gastos",
         data: chartData.expenses,
-        backgroundColor: "rgba(255, 99, 132, 0.2)", // Color con transparencia
-        borderColor: "rgba(255, 99, 132, 1)", // Color del borde
+        backgroundColor: "rgba(255, 99, 132, 0.2)", 
+        borderColor: "rgba(255, 99, 132, 1)", 
         borderWidth: 1,
-        fill: true, // Esto asegura que el área debajo de la línea esté rellena
+        fill: true, 
       },
       {
         label: "Ingresos",
         data: chartData.incomes,
-        backgroundColor: "rgba(54, 162, 235, 0.2)", // Color con transparencia
-        borderColor: "rgba(54, 162, 235, 1)", // Color del borde
+        backgroundColor: "rgba(54, 162, 235, 0.2)", 
+        borderColor: "rgba(54, 162, 235, 1)", 
         borderWidth: 1,
-        fill: true, // Esto asegura que el área debajo de la línea esté rellena
+        fill: true, 
       },
     ],
   };
@@ -111,10 +126,18 @@ export function ChartJSFinancesUser() {
     },
     elements: {
       line: {
-        tension: 0.4, // Aquí se aplica el suavizado de la línea (0 para sin suavizado)
+        tension: 0.4, 
       },
     },
   };
 
-  return <Line data={data} options={options} />;
+  return (
+    <div>
+      {error ? (
+        <div className="text-red-500">{error}</div> 
+      ) : (
+        <Line data={data} options={options} />
+      )}
+    </div>
+  );
 }
