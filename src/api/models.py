@@ -129,8 +129,8 @@ class Group_Finances(db.Model):
     id_group_finance = db.Column(db.Integer, primary_key=True)
     id_group = db.Column(db.Integer, db.ForeignKey('groups.id_group',ondelete = 'CASCADE'), nullable=False)
     id_finance = db.Column(db.Integer, db.ForeignKey('finances.id_finance',ondelete = 'CASCADE'), nullable=False)
-    create_by = db.Column(db.Integer, db.ForeignKey('users.id_user',ondelete = 'CASCADE'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    id_user = db.Column(db.Integer, db.ForeignKey('users.id_user',ondelete = 'CASCADE'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
 
     # Relaciones bidireccionales
     group = db.relationship('Groups', backref='group_finances_group')
@@ -138,13 +138,13 @@ class Group_Finances(db.Model):
     user = db.relationship('Users', backref='group_finances_user')
 
     def __repr__(self):
-        return f'<Group_Finance {self.id_group} - {self.id_finance} from {self.create_by}>'
+            return f'<Group_Finance {self.id_group} - {self.id_finance} from {self.user.id_user}>'
 
     def serialize(self):
         return {
             "id": self.id_group_finance,
             "id_group": self.id_group,
             "id_finance": self.id_finance,
-            "create_by": self.create_by,
+        "create_by": self.user.id_user,  
             "date": self.date
             }

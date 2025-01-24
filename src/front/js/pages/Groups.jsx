@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 
 export function Groups() {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [message, setMessage] = useState()
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [message, setMessage] = useState();
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user')
-    return savedUser ? JSON.parse(savedUser) : null
-  })
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [group, setGroup] = useState(() => {
-    const savedGroup = localStorage.getItem('group')
-    return savedGroup ? JSON.parse(savedGroup) : null
-  })
-  const [nameGroup, setNameGroup] = useState(group ? group.name : '')
-
-  console.log(user);
-  console.log(group);
+    const savedGroup = localStorage.getItem('group');
+    return savedGroup ? JSON.parse(savedGroup) : null;
+  });
+  const [nameGroup, setNameGroup] = useState(group ? group.name : '');
+  const [finances, setFinances] = useState([]);
+  const [selectedFinance, setSelectedFinance] = useState('');
 
   useEffect(() => {
     if (!group && user.id_group) {
@@ -27,174 +26,205 @@ export function Groups() {
     }
   }, [user, group]);
 
-  //Obetener el Grupo del usuario
+  useEffect(() => {
+    if (user && group) {
+      fetchFinances(); // Llamar a la función fetchFinances cuando el usuario y grupo estén definidos
+    }
+  }, [user, group]);
+
+  // Obtener el Grupo del usuario
   const getGroup = async () => {
     try {
-      const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/get_user_group/${user.id}`)
-
-      const updatedGroup = await response.json()
+      const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/get_user_group/${user.id}`);
+      const updatedGroup = await response.json();
       if (response.status === 200) {
         setGroup(updatedGroup);
         localStorage.setItem('group', JSON.stringify(updatedGroup));
       }
-
-      if (response.status !== 200) {
-        console.log(data)
-      }
     } catch (error) {
-      console.log('Error al cargar el grupo', error)
+      console.log('Error al cargar el grupo', error);
     }
-  }
+  };
 
-  // Añadir usuario al grupo pasandole el id del grupo almadenado en el estado
+  // Añadir usuario al grupo
   const addUserToGroup = async ({ id_group }) => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/add_user_to_group/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 'id_group': id_group }),
-      })
+        body: JSON.stringify({ id_group }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (response.status === 200) {
-        setUser(prevUser => ({
+        setUser((prevUser) => ({
           ...prevUser,
-          id_group: id_group
-        }))
-        await changeRol({ id_rol: 1 })
-      }
-
-      if (response.status !== 200) {
-        console.log(data)
+          id_group,
+        }));
+        await changeRol({ id_rol: 1 });
       }
     } catch (error) {
-      console.log('Error al añadir usuario al grupo', error)
+      console.log('Error al añadir usuario al grupo', error);
     }
-  }
+  };
 
-  // Crear grupo pasandole el nombre y la descripción
+  // Crear grupo
   const createGroup = async ({ name, description }) => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/create_groups`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 'name': name, 'description': description })
-      })
+        body: JSON.stringify({ name, description }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (response.status === 200) {
-        localStorage.setItem('group', JSON.stringify(data))
-        setGroup(data)
-        await addUserToGroup({ id_group: data.id })
+        localStorage.setItem('group', JSON.stringify(data));
+        setGroup(data);
+        await addUserToGroup({ id_group: data.id });
         location.reload();
       }
-
-      if (response.status !== 200) {
-        console.log('Error al crear grupo', response)
-      }
     } catch (error) {
-      console.log('Error al crear grupo', error)
+      console.log('Error al crear grupo', error);
     }
-  }
+  };
 
-  // Cambiar el rol del usuario que crea el grupo a administrador
+  // Cambiar rol del usuario
   const changeRol = async ({ id_rol }) => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/change_rol/${user.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "id_rol": id_rol }) // 1 es el id del rol de administrador y 2 el invitado
-      })
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_rol }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (response.status === 200) {
-        setUser(prevUser => ({
+        setUser((prevUser) => ({
           ...prevUser,
-          id_rol: id_rol
-        }))
-        localStorage.setItem('user', JSON.stringify({
-          ...user,
-          id_rol: id_rol
+          id_rol,
         }));
-      }
-
-      if (response.status !== 200) {
-        console.log(data)
+        localStorage.setItem('user', JSON.stringify({ ...user, id_rol }));
       }
     } catch (error) {
-      console.log('Error al cambiar rol', error)
+      console.log('Error al cambiar rol', error);
     }
-  }
+  };
 
-  // Borrar Grupo
+  // Borrar grupo
   const deleteGroup = async () => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/delete_group/${group.id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "id_group": group.id }),
-      })
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_group: group.id }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (response.status === 200) {
-        localStorage.removeItem('group')
-        setGroup(null)
-        await changeRol({ id_rol: 2 })
-        setInterval(() => { location.reload() }, 1000)
-      }
-
-      if (response.status !== 200) {
-        console.log(data)
+        localStorage.removeItem('group');
+        setGroup(null);
+        await changeRol({ id_rol: 2 });
+        setInterval(() => {
+          location.reload();
+        }, 1000);
       }
     } catch (error) {
-      console.log('Error al cambiar rol', error)
+      console.log('Error al eliminar grupo', error);
     }
-  }
+  };
 
   // Cambiar nombre del grupo
   const renameGroup = async () => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/rename_group/${group.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "name": nameGroup })
-      })
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameGroup }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (response.status === 200) {
-        console.log(data)
-        setGroup(prevGroup => ({
+        setGroup((prevGroup) => ({
           ...prevGroup,
-          name: nameGroup
-        }))
-        location.reload()
-        await getGroup()
-      }
-
-      if (response.status !== 200) {
-        console.log(data)
+          name: nameGroup,
+        }));
+        location.reload();
+        await getGroup();
       }
     } catch (error) {
-      console.log('Error al cambiar rol', error)
+      console.log('Error al cambiar nombre de grupo', error);
     }
-  }
+  };
 
-  // Manejar el evento de submit del formulario de creación de grupo y llamar a la función de creación de grupo
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    createGroup({ name, description })
+  // Obtener finanzas
+  const fetchFinances = async () => {
+    try {
+      const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/get_finances/${user.id}`);
+      const data = await response.json();
+      console.log(data); // Verifica los datos recibidos del backend
+
+
+      if (response.status === 200) {
+        setFinances(data);
+      }
+    } catch (error) {
+      console.error('Error al obtener las finanzas:', error);
+    }
+  };
+
+ // Añadir finanza al grupo
+const addGroupFinance = async () => {
+  try {
+    // Verificar si group.finances está definido y es un array
+    const financesSet = new Set(group.finances ? group.finances.map(finance => finance.id) : []);
+
+    // Verificar si la finanza ya está en el grupo
+    if (financesSet.has(selectedFinance)) {
+      setMessage('Esta finanza ya ha sido añadida al grupo.');
+      return; // Salir de la función si ya está añadida
+    }
+
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/add_group_finance`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_group: group.id,
+        id_finance: selectedFinance,
+        id_user: user.id,
+        date: new Date().toISOString().split('T')[0], 
+      }),
+    });
+
+    if (response.status === 200) {
+      setMessage('Finanza añadida correctamente al grupo.');
+      console.log('Finanza añadida correctamente al grupo.');
+      // Actualizar la lista de finanzas si es necesario
+      fetchFinances();
+    } else {
+      const errorData = await response.json();
+      setMessage('Error al añadir finanza al grupo.');
+      console.error('Error al añadir finanza al grupo:', errorData);
+    }
+  } catch (error) {
+    setMessage('Error al añadir finanza al grupo.');
+    console.error('Error al añadir finanza al grupo', error);
   }
+};
+
+
 
   return (
     <div>
-      <div className="alert alert-warning" role="alert">{message}</div>
+      <div className="alert alert-warning" role="alert">
+        {message}
+      </div>
       {!group && (
         <div>
           <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroup">
             Create Group
           </button>
-
-          {/* Create Group */}
+          {/* Modal para crear grupo */}
           <div className="modal fade" id="createGroup" aria-labelledby="createGroupLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
@@ -203,7 +233,10 @@ export function Groups() {
                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    createGroup({ name, description });
+                  }}>
                     <div className="mb-3">
                       <label htmlFor="name" className="form-label">Name for Group</label>
                       <input type="text" className="form-control" id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -223,69 +256,71 @@ export function Groups() {
           </div>
         </div>
       )}
-
-      {user?.id_rol === 1 && (
+      {user?.id_rol === 1 && group && (
         <div>
           <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#renameGroup">
             Rename Group
           </button>
 
-          <button type="button" disabled className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUser">
-            Add User
-          </button>
-
-          <button type="button" disabled className="btn btn-info" data-bs-toggle="modal" data-bs-target="#addFinanze">
+          <button type="button" className="btn btn-info" data-bs-toggle="modal" data-bs-target="#addFinanceModal">
             Add Finance
           </button>
-
-          <button type="button" className="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteGroup">
-            Delete Group
-          </button>
-
-          {/* Name Group */}
-          <div className="modal fade" id="renameGroup" aria-labelledby="renameGroupLabel" aria-hidden="true">
+          {/* Modal para añadir finanza */}
+          <div className="modal fade" id="addFinanceModal" aria-labelledby="addFinanceModalLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="renameGroupLabel">Rename Group</h1>
+                  <h1 className="modal-title fs-5" id="addFinanceModalLabel">Añadir Finanza al Grupo</h1>
                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={renameGroup}>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    addGroupFinance();
+                  }}>
                     <div className="mb-3">
-                      <label htmlFor="name" className="form-label">New Name</label>
-                      <input type="text" className="form-control" id="name" value={nameGroup} onChange={(e) => setNameGroup(e.target.value)} />
+                      <label htmlFor="selectFinance" className="form-label">Seleccionar Finanza</label>
+                      <select
+                        id="selectFinance"
+                        className="form-select"
+                        value={selectedFinance}
+                        onChange={(e) => setSelectedFinance(e.target.value)}
+                      >
+                        <option value="">Selecciona una opción</option>
+                        {finances.map((finance) => (
+                          <option key={finance.id} value={finance.id}>
+                            {finance.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                      <button type="submit" className="btn btn-primary">Añadir Finanza</button>
                     </div>
                   </form>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="button" className="btn btn-warning" onClick={renameGroup}>Rename Group</button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Delete Group */}
+          {/* Modal para eliminar grupo */}
           <div className="modal fade" id="deleteGroup" aria-labelledby="deleteGroupLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="deleteGroupLabel">Surely you want to delete the group</h1>
+                  <h1 className="modal-title fs-5" id="deleteGroupLabel">Seguro que deseas eliminar el grupo</h1>
                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="button" className="btn btn-danger" onClick={deleteGroup}>Delete Group</button>
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                  <button type="button" className="btn btn-danger" onClick={deleteGroup}>Eliminar Grupo</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
-
     </div>
   );
 }
-
