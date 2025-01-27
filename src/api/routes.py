@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, Users, Groups, Roles, Group_Finances  
+from api.models import db, Users, Groups, Roles, Group_Finances
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -274,4 +274,35 @@ def add_group_finance():
         print(e)
         return jsonify({"error": "Se produjo un error al agregar las finanzas al grupo."}), 500
 
+#   Obtener todas las finanzas asociadas a un grupo específico.
+@api.route('/get_finances_group/<int:id_group>', methods=['GET'])
+def get_finances_group(id_group):
+    try:
+        # Busca el grupo por su ID
+        group = Groups.query.filter_by(id_group=id_group).first()
 
+        if not group:
+            return jsonify({"error": "Grupo no encontrado"}), 404
+
+        # Obtén las finanzas asociadas al grupo a través de group_finances
+        finances = [
+            {
+                "id": gf.finance.id_finance,
+                "name": gf.finance.name,
+                "amount": gf.finance.amount,
+                "date": gf.finance.date.strftime('%Y-%m-%d') if gf.finance.date else None,
+                "description": gf.finance.description,
+                "category": gf.finance.category.category if gf.finance.category else None,  
+                "type": gf.finance.type.type if gf.finance.type else None,  
+                "user": gf.finance.user.name if gf.finance.user else None  
+            }
+            for gf in group.group_finances
+        ]
+
+        return jsonify(finances), 200
+
+    except Exception as e:
+        return jsonify({"error": "Error interno del servidor", "message": str(e)}), 500
+
+    
+    # Agregar quien a a metido la finanza

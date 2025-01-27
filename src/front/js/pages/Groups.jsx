@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 export function Groups() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [message, setMessage] = useState();
+  const [message, setMessage] = useState('');
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -12,23 +12,18 @@ export function Groups() {
     const savedGroup = localStorage.getItem('group');
     return savedGroup ? JSON.parse(savedGroup) : null;
   });
+
   const [nameGroup, setNameGroup] = useState(group ? group.name : '');
   const [finances, setFinances] = useState([]);
-  const [selectedFinance, setSelectedFinance] = useState('');
+  const [selectedFinance, setSelectedFinance] = useState(null);
 
   useEffect(() => {
-    if (!group && user.id_group) {
+    if (!group && user?.id_group) {
       getGroup();
     } else if (group) {
       setMessage(`Ya perteneces a un grupo: ${group.name}`);
     } else {
       setMessage('No perteneces a ningún grupo, puedes crear uno nuevo.');
-    }
-  }, [user, group]);
-
-  useEffect(() => {
-    if (user && group) {
-      fetchFinances(); // Llamar a la función fetchFinances cuando el usuario y grupo estén definidos
     }
   }, [user, group]);
 
@@ -45,7 +40,6 @@ export function Groups() {
       console.log('Error al cargar el grupo', error);
     }
   };
-
   // Añadir usuario al grupo
   const addUserToGroup = async ({ id_group }) => {
     try {
@@ -54,7 +48,6 @@ export function Groups() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_group }),
       });
-
       const data = await response.json();
       if (response.status === 200) {
         setUser((prevUser) => ({
@@ -67,9 +60,13 @@ export function Groups() {
       console.log('Error al añadir usuario al grupo', error);
     }
   };
-
   // Crear grupo
   const createGroup = async ({ name, description }) => {
+    if (!name || !description) {
+      setMessage('Por favor, completa todos los campos.');
+      return;
+    }
+
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/create_groups`, {
         method: 'POST',
@@ -88,7 +85,6 @@ export function Groups() {
       console.log('Error al crear grupo', error);
     }
   };
-
   // Cambiar rol del usuario
   const changeRol = async ({ id_rol }) => {
     try {
@@ -97,7 +93,6 @@ export function Groups() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_rol }),
       });
-
       const data = await response.json();
       if (response.status === 200) {
         setUser((prevUser) => ({
@@ -110,7 +105,6 @@ export function Groups() {
       console.log('Error al cambiar rol', error);
     }
   };
-
   // Borrar grupo
   const deleteGroup = async () => {
     try {
@@ -133,9 +127,13 @@ export function Groups() {
       console.log('Error al eliminar grupo', error);
     }
   };
-
   // Cambiar nombre del grupo
   const renameGroup = async () => {
+    if (!nameGroup) {
+      setMessage('El nombre del grupo no puede estar vacío.');
+      return;
+    }
+
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/rename_group/${group.id}`, {
         method: 'PUT',
@@ -156,15 +154,11 @@ export function Groups() {
       console.log('Error al cambiar nombre de grupo', error);
     }
   };
-
   // Obtener finanzas
   const fetchFinances = async () => {
     try {
       const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/get_finances/${user.id}`);
       const data = await response.json();
-      console.log(data); // Verifica los datos recibidos del backend
-
-
       if (response.status === 200) {
         setFinances(data);
       }
@@ -172,100 +166,71 @@ export function Groups() {
       console.error('Error al obtener las finanzas:', error);
     }
   };
-
- // Añadir finanza al grupo
-const addGroupFinance = async () => {
-  try {
-    // Verificar si group.finances está definido y es un array
-    const financesSet = new Set(group.finances ? group.finances.map(finance => finance.id) : []);
-
-    // Verificar si la finanza ya está en el grupo
-    if (financesSet.has(selectedFinance)) {
-      setMessage('Esta finanza ya ha sido añadida al grupo.');
-      return; // Salir de la función si ya está añadida
+  // Añadir finanza al grupo
+  const addGroupFinance = async () => {
+    if (!selectedFinance) {
+      setMessage('Por favor, selecciona una finanza.');
+      return;
     }
 
-    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/add_group_finance`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_group: group.id,
-        id_finance: selectedFinance,
-        id_user: user.id,
-        date: new Date().toISOString().split('T')[0], 
-      }),
-    });
+    try {
+      const financeExists = group.finances?.some(finance => finance.id === selectedFinance);
+      if (financeExists) {
+        setMessage('Esta finanza ya ha sido añadida al grupo.');
+        return;
+      }
 
-    if (response.status === 200) {
-      setMessage('Finanza añadida correctamente al grupo.');
-      console.log('Finanza añadida correctamente al grupo.');
-      // Actualizar la lista de finanzas si es necesario
-      fetchFinances();
-    } else {
-      const errorData = await response.json();
+      const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/add_group_finance`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_group: group.id,
+          id_finance: selectedFinance,
+          id_user: user.id,
+          date: new Date().toISOString().split('T')[0],
+        }),
+      });
+
+      if (response.status === 200) {
+        const addedFinance = finances.find(f => f.id === selectedFinance);
+        setGroup(prevGroup => ({
+          ...prevGroup,
+          finances: [...(prevGroup.finances || []), addedFinance],
+        }));
+        setMessage('Finanza añadida correctamente al grupo.');
+        setSelectedFinance(null);
+        document.getElementById('addFinanceModal').querySelector('.btn-close').click();
+      } else {
+        const errorData = await response.json();
+        setMessage('Error al añadir finanza al grupo.');
+        console.error('Error al añadir finanza al grupo:', errorData);
+      }
+    } catch (error) {
       setMessage('Error al añadir finanza al grupo.');
-      console.error('Error al añadir finanza al grupo:', errorData);
+      console.error('Error al añadir finanza al grupo', error);
     }
-  } catch (error) {
-    setMessage('Error al añadir finanza al grupo.');
-    console.error('Error al añadir finanza al grupo', error);
-  }
-};
-
-
+  };
 
   return (
     <div>
       <div className="alert alert-warning" role="alert">
         {message}
       </div>
+
       {!group && (
         <div>
           <button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroup">
             Create Group
           </button>
           {/* Modal para crear grupo */}
-          <div className="modal fade" id="createGroup" aria-labelledby="createGroupLabel" aria-hidden="true">
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="createGroupLabel">New Group</h1>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-body">
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    createGroup({ name, description });
-                  }}>
-                    <div className="mb-3">
-                      <label htmlFor="name" className="form-label">Name for Group</label>
-                      <input type="text" className="form-control" id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                    </div>
-                    <div className="mb-3">
-                      <label htmlFor="description" className="form-label">Description</label>
-                      <textarea className="form-control" id="description" rows="3" value={description} onChange={(e) => setDescription(e.target.value)}></textarea>
-                    </div>
-                    <div className="modal-footer">
-                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" className="btn btn-primary">Create Group</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
+
       {user?.id_rol === 1 && group && (
         <div>
-          <button type="button" className="btn btn-warning" data-bs-toggle="modal" data-bs-target="#renameGroup">
-            Rename Group
-          </button>
-
-          <button type="button" className="btn btn-info" data-bs-toggle="modal" data-bs-target="#addFinanceModal">
+          <button type="button" className="btn btn-info" data-bs-toggle="modal" data-bs-target="#addFinanceModal" onClick={fetchFinances}>
             Add Finance
           </button>
-          {/* Modal para añadir finanza */}
           <div className="modal fade" id="addFinanceModal" aria-labelledby="addFinanceModalLabel" aria-hidden="true">
             <div className="modal-dialog">
               <div className="modal-content">
@@ -283,8 +248,8 @@ const addGroupFinance = async () => {
                       <select
                         id="selectFinance"
                         className="form-select"
-                        value={selectedFinance}
-                        onChange={(e) => setSelectedFinance(e.target.value)}
+                        value={selectedFinance || ''}
+                        onChange={(e) => setSelectedFinance(parseInt(e.target.value))}
                       >
                         <option value="">Selecciona una opción</option>
                         {finances.map((finance) => (
@@ -296,7 +261,9 @@ const addGroupFinance = async () => {
                     </div>
                     <div className="modal-footer">
                       <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                      <button type="submit" className="btn btn-primary">Añadir Finanza</button>
+                      <button type="submit" className="btn btn-primary" disabled={!selectedFinance}>
+                        Añadir Finanza
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -304,23 +271,59 @@ const addGroupFinance = async () => {
             </div>
           </div>
 
-          {/* Modal para eliminar grupo */}
-          <div className="modal fade" id="deleteGroup" aria-labelledby="deleteGroupLabel" aria-hidden="true">
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="deleteGroupLabel">Seguro que deseas eliminar el grupo</h1>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                  <button type="button" className="btn btn-danger" onClick={deleteGroup}>Eliminar Grupo</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <section className="group-finances">
+            <h3>Group Finances</h3>
+            <ul>
+              {Array.isArray(group.finances) && group.finances.length > 0 ? (
+                group.finances.map((finance) => (
+                  <li key={finance.id} className="finance-item">
+                    <div className="finance-logo">
+                      <img
+                        src={`https://unavatar.io/${finance.name}`}
+                        alt={`${finance.name} logo`}
+                        className="finance-logo-img"
+                      />
+                    </div>
+                    <div className="finance-info">
+                      <strong>{finance.name}</strong>
+                      <p>{finance.description || 'No description available'}</p>
+                    </div>
+                    <div className="transaction-amount">
+                      <span className={`amount ${finance.category === "Gasto" ? "expense" : "income"}`}>
+                        {finance.category === "Gasto" ? "-" : "+"} {finance.amount} $
+                      </span>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <p>Aun no hay finanzas en este grupo...</p>
+              )}
+            </ul>
+          </section>
         </div>
       )}
     </div>
   );
 }
+
+
+//           {/* Modal para eliminar grupo */}
+//           <div className="modal fade" id="deleteGroup" aria-labelledby="deleteGroupLabel" aria-hidden="true">
+//             <div className="modal-dialog">
+//               <div className="modal-content">
+//                 <div className="modal-header">
+//                   <h1 className="modal-title fs-5" id="deleteGroupLabel">Seguro que deseas eliminar el grupo</h1>
+//                   <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+//                 </div>
+//                 <div className="modal-footer">
+//                   <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+//                   <button type="button" className="btn btn-danger" onClick={deleteGroup}>Eliminar Grupo</button>
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
