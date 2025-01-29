@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
-from api.models import db, Finances,Categories, Types
+from api.models import db, Finances,Categories, Types, Roles
 from flask_cors import CORS
+
 
 finances_bp = Blueprint('finances', __name__)
 CORS(finances_bp)
@@ -21,6 +22,13 @@ def get_types():
 def get_finances():
     finances = Finances.query.all()
     return jsonify([finance.serialize() for finance in finances]), 200
+
+#hacer un get para traer administrador y invitado
+@finances_bp.route('/api/roles', methods=['GET'])
+def get_roles():
+    roles = Roles.query.all()
+    return jsonify([rol.serialize() for rol in roles]), 200
+
 
 # Ruta para obtener una finanza específica por ID
 @finances_bp.route('/api/finances/<int:id>', methods=['GET'])

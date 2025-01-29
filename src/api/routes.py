@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, Users, Groups, Roles
+from api.models import db, Users, Groups, Roles, Categories, Types
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -246,3 +246,37 @@ def get_user_group(id_user):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@api.route('/categories', methods = ['POST'])
+def add_categories():
+    request_body=request.get_json()
+    if not request_body or 'category' not in request_body:
+        return jsonify({'error':'field category is required'}), 400
+    category_name=request_body['category']
+    new_category=Categories(category=category_name)
+    db.session.add(new_category)
+    db.session.commit()
+    return jsonify({'message':'category added with success'}), 201
+
+@api.route('/types', methods = ['POST'])
+def add_types():
+    request_body=request.get_json()
+    if not request_body or 'type' not in request_body:
+        return jsonify({'error':'select a type'}), 400
+    type_name=request_body['type']
+    new_type=Types(type=type_name)
+    db.session.add(new_type)
+    db.session.commit()
+    return jsonify({'message':'type added with success'}), 201
+
+@api.route('/roles', methods = ['POST'])
+def add_roles():
+    request_body=request.get_json()
+    if not request_body or 'rol' not in request_body:
+        return jsonify({'error': 'select a rol'}), 400
+    rol_name=request_body['rol']
+    new_rol=Roles(rol=rol_name)
+    db.session.add(new_rol)
+    db.session.commit()
+    return jsonify({'message':'rol added with success'}),
+
