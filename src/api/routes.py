@@ -303,6 +303,3 @@ def get_finances_group(id_group):
 
     except Exception as e:
         return jsonify({"error": "Error interno del servidor", "message": str(e)}), 500
-
-    
-    # Agregar quien a a metido la finanza

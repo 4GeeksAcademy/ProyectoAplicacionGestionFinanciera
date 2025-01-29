@@ -30,9 +30,7 @@ const Layout = () => {
 
     const [token, setToken] = useState(localStorage.getItem("token"))
     const [isValidToken, setIsValidToken] = useState(false)
-    console.log("isValid",isValidToken)
     const [isLoading, setIsLoading] = useState(true)
-    console.log(token)
 
     useEffect(() => {
         const validateToken = async () => {
@@ -49,12 +47,10 @@ const Layout = () => {
                     if (response.ok){
                         setIsValidToken(true)
                         localStorage.setItem('user', JSON.stringify(data))
-                        console.log(response)
                     } else {
                         setIsValidToken(false)
                         localStorage.removeItem('token')
                         setToken(null)
-                        console.log("no")
                     }
                 } catch (error) {
                     console.log('Error validating token', error)
