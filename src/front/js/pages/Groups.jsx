@@ -174,45 +174,50 @@ export function Groups() {
   };
 
  // Añadir finanza al grupo
-const addGroupFinance = async () => {
+ const addGroupFinance = async () => {
   try {
-    // Verificar si group.finances está definido y es un array
-    const financesSet = new Set(group.finances ? group.finances.map(finance => finance.id) : []);
-
-    // Verificar si la finanza ya está en el grupo
-    if (financesSet.has(selectedFinance)) {
-      setMessage('Esta finanza ya ha sido añadida al grupo.');
-      return; // Salir de la función si ya está añadida
+    // Verificar si los datos existen antes de enviarlos
+    if (!group?.id || !selectedFinance || !user?.id) {
+      console.error("Faltan datos obligatorios:", { group, selectedFinance, user });
+      setMessage("Error: Faltan datos obligatorios.");
+      return;
     }
+
+    // Imprimir los valores antes de enviarlos
+    console.log("group.id:", group.id);
+    console.log("selectedFinance:", selectedFinance);
+    console.log("user.id:", user.id);
+
+    const requestData = {
+      id_group: group.id,
+      id_finance: selectedFinance,
+      id_user: user.id,
+      date: new Date().toISOString().split("T")[0], 
+    };
+
+    console.log("Datos enviados a backend:", requestData); // Depuración(imprime los datos enviados en el frontend y recibidos en el backend.)
 
     const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}api/add_group_finance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_group: group.id,
-        id_finance: selectedFinance,
-        id_user: user.id,
-        date: new Date().toISOString().split('T')[0], 
-      }),
+      body: JSON.stringify(requestData),
     });
 
-    if (response.status === 200) {
-      setMessage('Finanza añadida correctamente al grupo.');
-      console.log('Finanza añadida correctamente al grupo.');
-      // Actualizar la lista de finanzas si es necesario
-      fetchFinances();
+    const responseData = await response.json();
+    
+    if (response.ok) {
+      setMessage("Finanza añadida correctamente al grupo.");
+      console.log("Finanza añadida correctamente:", responseData);
+      fetchFinances(); // Recargar la lista de finanzas
     } else {
-      const errorData = await response.json();
-      setMessage('Error al añadir finanza al grupo.');
-      console.error('Error al añadir finanza al grupo:', errorData);
+      setMessage(`Error: ${responseData.error || "No se pudo añadir la finanza."}`);
+      console.error("Error en la respuesta del backend:", responseData);
     }
   } catch (error) {
-    setMessage('Error al añadir finanza al grupo.');
-    console.error('Error al añadir finanza al grupo', error);
+    setMessage("Error al añadir finanza al grupo.");
+    console.error("Error en fetch:", error);
   }
 };
-
-
 
   return (
     <div>
