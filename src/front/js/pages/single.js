@@ -11,9 +11,9 @@ export const Single = props => {
 	const [message, setMessage] = useState(null);
 	const [groupName, setGroupName] = useState("");
 	const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user')
-    return savedUser ? JSON.parse(savedUser) : null
-  })
+		const savedUser = localStorage.getItem('user')
+		return savedUser ? JSON.parse(savedUser) : null
+	})
 
 	console.log("params", groupId, email);
 
@@ -29,7 +29,7 @@ export const Single = props => {
 			})
 
 			const data = await response.json()
-			if (!response.ok){
+			if (!response.ok) {
 				setMessage(data.error)
 			}
 		}
@@ -37,7 +37,7 @@ export const Single = props => {
 		const getGroupName = async () => {
 			const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3001/'}/api/get_group_name/${groupId}`)
 			const data = await response.json()
-			if (response.ok){
+			if (response.ok) {
 				setGroupName(data.name)
 			}
 		}
@@ -47,21 +47,23 @@ export const Single = props => {
 	}, [params]);
 
 	return (
-		<div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="bg-white p-4 rounded shadow-lg text-center w-75">
-        {!message && <div>
-					<h2 className="fw-bold">¡Invitación Aceptada!</h2>
-					<p className="text-secondary mt-2">
-						El usuario con email <span className="fw-bold text-primary">{email}</span>  
-						ha sido añadido al grupo <span className="fw-bold text-success">{groupName}</span>.
-					</p>	
-				</div>}
-        {message && <div className="alert alert-danger"><h2>Error</h2>{message}</div>}
-        <div className="mt-4">
-          <Link to="/groups" className="btn btn-primary">Volver a Mis Grupos</Link>
-        </div>
-      </div>
-    </div>
+		<div className="d-flex justify-content-center align-items-center min-vh-100 w-100 bg-light">
+			<div className="bg-white p-4 rounded shadow-lg text-center" style={{ "maxWidth": "600px", "width": "90%" }}>
+				{!message &&
+					<div>
+						<h2 className="fw-bold">¡Invitación Aceptada!</h2>
+						<p className="text-secondary mt-2">
+							El usuario con email <span className="fw-bold text-primary">{email}</span>
+							ha sido añadido al grupo <span className="fw-bold text-success">{groupName}</span>.
+						</p>
+					</div>}
+				{message &&
+					<div className="alert alert-danger"><h2>Error</h2>{message}</div>}
+				<div className="mt-4">
+					<Link to="/groups" className="btn btn-primary">Volver a Mis Grupos</Link>
+				</div>
+			</div>
+		</div>
 	);
 };
 
