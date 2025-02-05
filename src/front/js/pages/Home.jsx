@@ -203,7 +203,7 @@ export function Home() {
 
                     <section className="overview">
                         <div className="balance">
-                            <h3>Your Total Balance</h3>
+                            <h3>your Total Balance</h3>
                             <h1>{(incomes - expense).toLocaleString("en-US", { style: "decimal" })} $</h1>
                             <p className="current-date">{new Date().toLocaleDateString("en-US", {
                                 weekday: "long",
