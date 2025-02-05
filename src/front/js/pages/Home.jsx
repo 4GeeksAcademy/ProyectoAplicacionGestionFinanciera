@@ -195,7 +195,7 @@ export function Home() {
                                             <button className="btn delete-finance" onClick={() => deleteFinance(item.id)}>
                                                 <MdDeleteOutline className="delete-icon" />
                                             </button>
-                                        </p>
+                                        
                                     </div>
 
                                     <div className="transaction-amount">
@@ -204,7 +204,8 @@ export function Home() {
                                         </span>
                                     </div>
                                 </li>
-                            ))}
+                            )))}
+                        
 
                         </ul>
 
@@ -353,6 +354,7 @@ export function Home() {
                 </div>
             </div>
         </div>
+    
     );
 }
 

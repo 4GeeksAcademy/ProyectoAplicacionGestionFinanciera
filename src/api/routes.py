@@ -14,7 +14,7 @@ from urllib.parse import quote
 
 load_dotenv()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://sample-service-name-cr5k.onrender.com")
 
 api = Blueprint('api', __name__)
 
